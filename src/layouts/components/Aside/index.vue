@@ -1,14 +1,11 @@
 <!-- Aside 侧边栏 -->
 <script setup lang="ts">
-import type { ConversationItem } from 'vue-element-plus-x/types/Conversations';
-import type { ChatSessionVo } from '@/api/session/types';
 import {
   Document,
   Menu as IconMenu,
   Location,
 } from '@element-plus/icons-vue';
-import { useRoute, useRouter } from 'vue-router';
-import { get_session } from '@/api';
+import { useRoute } from 'vue-router';
 import logo from '@/assets/images/logo.svg';
 import SvgIcon from '@/components/SvgIcon/index.vue';
 import Collapse from '@/layouts/components/Header/components/Collapse.vue';
@@ -16,13 +13,11 @@ import { useDesignStore } from '@/stores';
 import { useSessionStore } from '@/stores/modules/session';
 
 const route = useRoute();
-const router = useRouter();
 const designStore = useDesignStore();
 const sessionStore = useSessionStore();
 
 const sessionId = computed(() => route.params?.id);
 const conversationsList = computed(() => sessionStore.sessionList);
-const loadMoreLoading = computed(() => sessionStore.isLoadingMore);
 const active = ref<string | undefined>();
 
 onMounted(async () => {
@@ -30,9 +25,7 @@ onMounted(async () => {
   await sessionStore.requestSessionList();
   // 高亮最新会话
   if (conversationsList.value.length > 0 && sessionId.value) {
-    const currentSessionRes = await get_session(`${sessionId.value}`);
     // 通过 ID 查询详情，设置当前会话 (因为有分页)
-    sessionStore.setCurrentSession(currentSessionRes.data);
   }
 });
 
@@ -54,96 +47,6 @@ watch(
 function handleCreatChat() {
   // 创建会话, 跳转到默认聊天
   sessionStore.createSessionBtn();
-}
-
-// 切换会话
-function handleChange(item: ConversationItem<ChatSessionVo>) {
-  sessionStore.setCurrentSession(item);
-  router.replace({
-    name: 'chatWithId',
-    params: {
-      id: item.id,
-    },
-  });
-}
-
-// 处理组件触发的加载更多事件
-async function handleLoadMore() {
-  if (!sessionStore.hasMore)
-    return; // 无更多数据时不加载
-  await sessionStore.loadMoreSessions();
-}
-
-// 右键菜单
-function handleMenuCommand(command: string, item: ConversationItem<ChatSessionVo>) {
-  switch (command) {
-    case 'delete':
-      ElMessageBox.confirm('删除后，聊天记录将不可恢复。', '确定删除对话？', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-        confirmButtonClass: 'el-button--danger',
-        cancelButtonClass: 'el-button--info',
-        roundButton: true,
-        autofocus: false,
-      })
-        .then(() => {
-          // 删除会话
-          sessionStore.deleteSessions([item.id!]);
-          nextTick(() => {
-            if (item.id === active.value) {
-              // 如果删除当前会话 返回到默认页
-              sessionStore.createSessionBtn();
-            }
-          });
-        })
-        .catch(() => {
-          // 取消删除
-        });
-      break;
-    case 'rename':
-      ElMessageBox.prompt('', '编辑对话名称', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        inputErrorMessage: '请输入对话名称',
-        confirmButtonClass: 'el-button--primary',
-        cancelButtonClass: 'el-button--info',
-        roundButton: true,
-        inputValue: item.sessionTitle, // 设置默认值
-        autofocus: false,
-        inputValidator: (value) => {
-          if (!value) {
-            return false;
-          }
-          return true;
-        },
-      }).then(({ value }) => {
-        sessionStore
-          .updateSession({
-            id: item.id!,
-            sessionTitle: value,
-            sessionContent: item.sessionContent,
-          })
-          .then(() => {
-            ElMessage({
-              type: 'success',
-              message: '修改成功',
-            });
-            nextTick(() => {
-              // 如果是当前会话，则更新当前选中会话信息
-              if (sessionStore.currentSession?.id === item.id) {
-                sessionStore.setCurrentSession({
-                  ...item,
-                  sessionTitle: value,
-                });
-              }
-            });
-          });
-      });
-      break;
-    default:
-      break;
-  }
 }
 </script>
 
@@ -232,29 +135,6 @@ function handleMenuCommand(command: string, item: ConversationItem<ChatSessionVo
               </el-popover>
             </el-menu-item-group>
           </el-menu>
-        </div>
-        <div class="aside-content">
-          <div v-if="conversationsList.length > 0" class="conversations-wrap overflow-hidden">
-            <Conversations
-              v-model:active="active" :items="conversationsList" :label-max-width="200"
-              :show-tooltip="true" :tooltip-offset="60" show-built-in-menu groupable row-key="id"
-              label-key="sessionTitle" tooltip-placement="right" :load-more="handleLoadMore"
-              :load-more-loading="loadMoreLoading" :items-style="{
-                marginLeft: '8px',
-                userSelect: 'none',
-                borderRadius: '10px',
-                padding: '8px 12px',
-              }" :items-active-style="{
-                backgroundColor: '#fff',
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                color: 'rgba(0, 0, 0, 0.85)',
-              }" :items-hover-style="{
-                backgroundColor: 'rgba(0, 0, 0, 0.04)',
-              }" @menu-command="handleMenuCommand" @change="handleChange"
-            />
-          </div>
-
-          <el-empty v-else class="h-full flex-center" description="暂无对话记录" />
         </div>
       </div>
     </div>

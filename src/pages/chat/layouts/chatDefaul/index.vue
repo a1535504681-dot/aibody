@@ -1,49 +1,35 @@
 <!-- 默认消息列表页 -->
 <script setup lang="ts">
-import type { FilesCardProps } from 'vue-element-plus-x/types/FilesCard';
-import FilesSelect from '@/components/FilesSelect/index.vue';
-import ModelSelect from '@/components/ModelSelect/index.vue';
+import { Sender } from 'vue-element-plus-x';
+import { useRouter } from 'vue-router';
 import WelecomeText from '@/components/WelecomeText/index.vue';
 import { useUserStore } from '@/stores';
-import { useFilesStore } from '@/stores/modules/files';
-import { useSessionStore } from '@/stores/modules/session';
-
-const userStore = useUserStore();
-const sessionStore = useSessionStore();
-const filesStore = useFilesStore();
 
 const senderValue = ref('');
-const senderRef = ref();
+const userStore = useUserStore();
+const router = useRouter();
+const senderRef = ref<InstanceType<typeof Sender> | null>(null);
 
 async function handleSend() {
-  localStorage.setItem('chatContent', senderValue.value);
-  await sessionStore.createSessionList({
-    userId: userStore.userInfo?.userId as number,
-    sessionContent: senderValue.value,
-    sessionTitle: senderValue.value.slice(0, 10),
-    remark: senderValue.value.slice(0, 10),
-  });
+  const messageContent = senderValue.value;
+  localStorage.setItem('chatContent', messageContent);
+  senderValue.value = '';
+  if (!userStore.token) {
+    router.replace({
+      name: 'chatWithId',
+      params: {
+        id: 'not_login',
+      },
+    });
+  }
+  else {
+    // 跳转聊天页 根据用户id来即可，聊天消息存储在pinia中，进入聊天页根据用户id来获取对应的聊天消息，如果没有就新建一个聊天记录
+    router.replace({
+      name: 'chatWithId',
+      params: { id: `${userStore.userInfo?.userId}` },
+    });
+  }
 }
-
-function handleDeleteCard(_item: FilesCardProps, index: number) {
-  filesStore.deleteFileByIndex(index);
-}
-
-watch(
-  () => filesStore.filesList.length,
-  (val) => {
-    if (val > 0) {
-      nextTick(() => {
-        senderRef.value.openHeader();
-      });
-    }
-    else {
-      nextTick(() => {
-        senderRef.value.closeHeader();
-      });
-    }
-  },
-);
 </script>
 
 <template>
@@ -53,55 +39,13 @@ watch(
       ref="senderRef"
       v-model="senderValue"
       class="chat-defaul-sender"
-      :auto-size="{
-        maxRows: 9,
-        minRows: 3,
-      }"
-      variant="updown"
       clearable
-      allow-speech
+      :auto-size="{
+        maxRows: 8,
+        minRows: 4,
+      }"
       @submit="handleSend"
-    >
-      <template #header>
-        <div class="sender-header p-12px pt-6px pb-0px">
-          <Attachments
-            :items="filesStore.filesList"
-            :hide-upload="true"
-            @delete-card="handleDeleteCard"
-          >
-            <template #prev-button="{ show, onScrollLeft }">
-              <div
-                v-if="show"
-                class="prev-next-btn left-8px flex-center w-22px h-22px rounded-8px border-1px border-solid border-[rgba(0,0,0,0.08)] c-[rgba(0,0,0,.4)] hover:bg-#f3f4f6 bg-#fff font-size-10px"
-                @click="onScrollLeft"
-              >
-                <el-icon>
-                  <ArrowLeftBold />
-                </el-icon>
-              </div>
-            </template>
-
-            <template #next-button="{ show, onScrollRight }">
-              <div
-                v-if="show"
-                class="prev-next-btn right-8px flex-center w-22px h-22px rounded-8px border-1px border-solid border-[rgba(0,0,0,0.08)] c-[rgba(0,0,0,.4)] hover:bg-#f3f4f6 bg-#fff font-size-10px"
-                @click="onScrollRight"
-              >
-                <el-icon>
-                  <ArrowRightBold />
-                </el-icon>
-              </div>
-            </template>
-          </Attachments>
-        </div>
-      </template>
-      <template #prefix>
-        <div class="flex-1 flex items-center gap-8px flex-none w-fit overflow-hidden">
-          <FilesSelect />
-          <ModelSelect />
-        </div>
-      </template>
-    </Sender>
+    />
   </div>
 </template>
 

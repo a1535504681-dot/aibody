@@ -3,47 +3,30 @@
  */
 export interface SendDTO {
   /**
-   * 应用ID
+   * 应用ID todo:待定
    */
   appId?: string;
   /**
-   * 上下文的条数
+   * 上下文的条数 todo:待定
    */
   contentNumber?: number;
-  /**
-   * 是否开启mcp
-   */
-  isMcp?: boolean;
-  /**
-   * 知识库id
-   */
-  kid?: string;
   /*
   * 当前发送的消息
   */
   message?: Message;
-  messages?: Message[];
-  files?: [];
-  // model: ModelType;
+
+  // model: ModelType; todo:待定
   model?: string;
   /**
-   * 提示词
+   * 提示词 todo:待定
    */
   prompt?: string;
   /**
-   * 是否开启联网搜索(0关闭 1开启)
+   * 是否开启联网搜索(0关闭 1开启) todo:待定
    */
   search?: boolean;
   /**
-   * 会话id
-   */
-  sessionId?: string;
-  /**
-   * 是否开启流式对话
-   */
-  stream?: boolean;
-  /**
-   * 系统提示词
+   * 系统提示词 todo:待定
    */
   sysPrompt?: string;
   /**
@@ -51,7 +34,7 @@ export interface SendDTO {
    */
   userId?: number;
   /**
-   * 是否携带上下文
+   * 是否携带上下文 todo:待定
    */
   usingContext?: boolean;
 }

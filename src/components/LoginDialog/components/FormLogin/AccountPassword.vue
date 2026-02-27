@@ -7,10 +7,8 @@ import { useRouter } from 'vue-router';
 import { login } from '@/api';
 import { useUserStore } from '@/stores';
 import { useLoginFormStore } from '@/stores/modules/loginForm';
-import { useSessionStore } from '@/stores/modules/session';
 
 const userStore = useUserStore();
-const sessionStore = useSessionStore();
 const loginFromStore = useLoginFormStore();
 
 const formRef = ref<FormInstance>();
@@ -36,7 +34,6 @@ async function handleSubmit() {
     ElMessage.success('登录成功');
     userStore.closeLoginDialog();
     // 立刻获取回话列表
-    await sessionStore.requestSessionList(1, true);
     router.replace('/');
   }
   catch (error) {

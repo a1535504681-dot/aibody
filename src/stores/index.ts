@@ -9,4 +9,5 @@ export default store;
 
 // export * from './modules/chat';
 export * from './modules/design';
+export * from './modules/session';
 export * from './modules/user';

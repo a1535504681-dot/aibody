@@ -1,6 +1,5 @@
 import type { ChatMessageVo } from '@/api/chat/types';
 import { defineStore } from 'pinia';
-import { getChatList } from '@/api';
 import { useUserStore } from './user';
 
 export const useChatStore = defineStore('chat', () => {
@@ -24,8 +23,6 @@ export const useChatStore = defineStore('chat', () => {
 
   const setChatMap = (id: string, data: any[]) => {
     chatMap.value[id] = data?.map((item: any) => {
-      console.log('item', item);
-
       const isUser = item.messageType === 'USER';
       // const thinkContent = extractThkContent(item.content as string);
       return {
@@ -34,9 +31,6 @@ export const useChatStore = defineStore('chat', () => {
         role: isUser ? 'user' : 'system',
         placement: isUser ? 'end' : 'start',
         isMarkdown: true,
-        // variant: 'shadow',
-        // shape: 'corner',
-        files: item.metadata?.messageDTO?.files || [],
         loading: false,
         avatar: isUser
           ? avatar
@@ -50,27 +44,6 @@ export const useChatStore = defineStore('chat', () => {
         thinlCollapse: false,
       };
     });
-  };
-
-  // 获取当前会话的聊天记录
-  const requestChatList = async (sessionId: string) => {
-    // 如果没有 token 则不查询聊天记录
-    if (!userStore.token)
-      return;
-    try {
-      const res = await getChatList({
-        sessionId,
-        // userId: userStore.userInfo?.userId as number,
-      });
-      if (res.data) {
-        console.log('消息列表：', res);
-
-        setChatMap(sessionId, res.data);
-      }
-    }
-    catch (error) {
-      console.error('getChatList:', error);
-    }
   };
 
   // // 对思考中的内容回显做处理
@@ -102,8 +75,8 @@ export const useChatStore = defineStore('chat', () => {
 
   return {
     chatMap,
-    requestChatList,
     isDeepThinking,
+    setChatMap,
     setDeepThinking,
   };
 });

@@ -3,18 +3,20 @@
 import type { AnyObject } from 'typescript-api-pro';
 import type { BubbleProps } from 'vue-element-plus-x/types/Bubble';
 import type { BubbleListInstance } from 'vue-element-plus-x/types/BubbleList';
-import type { FilesCardProps } from 'vue-element-plus-x/types/FilesCard';
 import type { ThinkingStatus } from 'vue-element-plus-x/types/Thinking';
 import type { SendDTO } from '@/api/chat/types';
 import { useHookFetch } from 'hook-fetch/vue';
 import { Sender } from 'vue-element-plus-x';
 import { useRoute } from 'vue-router';
 import { send } from '@/api';
-import FilesSelect from '@/components/FilesSelect/index.vue';
-import ModelSelect from '@/components/ModelSelect/index.vue';
 import { useChatStore } from '@/stores/modules/chat';
-import { useFilesStore } from '@/stores/modules/files';
 import { useUserStore } from '@/stores/modules/user';
+
+const route = useRoute();
+// todo 这个肯定是要用的，聊天内容的状态管理，后续会增加一些功能，比如聊天记录的持久化，或者多回话管理等
+const chatStore = useChatStore();
+const userStore = useUserStore();
+const senderRef = ref<InstanceType<typeof Sender> | null>(null);
 
 type MessageItem = BubbleProps & {
   key: number;
@@ -23,14 +25,7 @@ type MessageItem = BubbleProps & {
   thinkingStatus?: ThinkingStatus;
   thinlCollapse?: boolean;
   reasoning_content?: string;
-  files: FilesCardProps[];
 };
-
-const route = useRoute();
-const chatStore = useChatStore();
-// const modelStore = useModelStore();
-const filesStore = useFilesStore();
-const userStore = useUserStore();
 
 // 用户头像
 const avatar = computed(() => {
@@ -39,7 +34,6 @@ const avatar = computed(() => {
 });
 
 const inputValue = ref('');
-const senderRef = ref<InstanceType<typeof Sender> | null>(null);
 const bubbleItems = ref<MessageItem[]>([]);
 const bubbleListRef = ref<BubbleListInstance | null>(null);
 
@@ -51,70 +45,25 @@ const { stream, loading: isLoading, cancel } = useHookFetch({
 });
 // 记录进入思考中
 let isThinking = false;
-
-watch(
-  () => route.params?.id,
-  async (_id_) => {
-    if (_id_) {
-      if (_id_ !== 'not_login') {
-        // 判断的当前会话id是否有聊天记录，有缓存则直接赋值展示
-        if (chatStore.chatMap[`${_id_}`] && chatStore.chatMap[`${_id_}`].length) {
-          bubbleItems.value = chatStore.chatMap[`${_id_}`] as MessageItem[];
-          // 滚动到底部
-          setTimeout(() => {
-            bubbleListRef.value!.scrollToBottom();
-          }, 350);
-          return;
-        }
-
-        // 无缓存则请求聊天记录
-        await chatStore.requestChatList(`${_id_}`);
-        // 请求聊天记录后，赋值回显，并滚动到底部
-        bubbleItems.value = chatStore.chatMap[`${_id_}`] as MessageItem[];
-        console.log('bubbleItem', bubbleItems.value);
-
-        // 滚动到底部
-        setTimeout(() => {
-          bubbleListRef.value!.scrollToBottom();
-        }, 350);
-      }
-
-      // 如果本地有发送内容 ，则直接发送
-      const v = localStorage.getItem('chatContent');
-      if (v) {
-        // 发送消息
-        console.log('发送消息 v', v);
-        setTimeout(() => {
-          startSSE(v);
-        }, 350);
-
-        localStorage.removeItem('chatContent');
-      }
-    }
-  },
-  { immediate: true, deep: true },
-);
-
 // 封装数据处理逻辑
 function handleDataChunk(chunk: AnyObject) {
   console.log('返回的chunk', chunk);
-
   try {
-    const reasoningChunk = chunk.chatResponse.result.output.metadata.reasoningContent;
-    // const reasoningChunk = chunk.choices?.[0].delta.reasoning_content;
-    if (reasoningChunk) {
-      // 开始思考链状态
-      bubbleItems.value[bubbleItems.value.length - 1].thinkingStatus = 'thinking';
-      bubbleItems.value[bubbleItems.value.length - 1].loading = true;
-      bubbleItems.value[bubbleItems.value.length - 1].thinlCollapse = true;
-      if (bubbleItems.value.length) {
-        bubbleItems.value[bubbleItems.value.length - 1].reasoning_content += reasoningChunk;
-      }
-    }
+    // const reasoningChunk = chunk.result.output.metadata.reasoningContent;
+    // // const reasoningChunk = chunk.choices?.[0].delta.reasoning_content;
+    // if (reasoningChunk) {
+    //   // 开始思考链状态
+    //   bubbleItems.value[bubbleItems.value.length - 1].thinkingStatus = 'thinking';
+    //   bubbleItems.value[bubbleItems.value.length - 1].loading = true;
+    //   bubbleItems.value[bubbleItems.value.length - 1].thinlCollapse = true;
+    //   if (bubbleItems.value.length) {
+    //     bubbleItems.value[bubbleItems.value.length - 1].reasoning_content += reasoningChunk;
+    //   }
+    // }
 
     // 另一种思考中形式，content中有 <think></think> 的格式
     // 一开始匹配到 <think> 开始，匹配到 </think> 结束，并处理标签中的内容为思考内容
-    const parsedChunk = chunk.chatResponse.result.output.text;
+    const parsedChunk = chunk.result.output.text;
     // choices?.[0].delta.content;
     if (parsedChunk) {
       const thinkStart = parsedChunk.includes('<think>');
@@ -165,14 +114,9 @@ async function startSSE(chatContent: string) {
     const message = addMessage(chatContent, true);
     const obj = new Object() as SendDTO;
     obj.message = message;
-    obj.files = message.files;
     addMessage('', false);// AI回复消息占位符
-    // 如果有文件，也要添加到聊天对话消息中。
-
     // 这里有必要调用一下 BubbleList 组件的滚动到底部 手动触发 自动滚动
     bubbleListRef.value?.scrollToBottom();
-    console.log('stream', chatContent);
-    obj.sessionId = route.params?.id !== 'not_login' ? String(route.params?.id) : 'not_login';
     obj.userId = userStore.userInfo?.userId;
     for await (const chunk of stream(obj)) {
       handleDataChunk(chunk.result as AnyObject);
@@ -212,7 +156,6 @@ function addMessage(message: string, isUser: boolean) {
     placement: isUser ? 'end' : 'start',
     isMarkdown: !isUser,
     loading: !isUser,
-    files: filesStore.filesList.length > 0 ? [...filesStore.filesList] : [],
     content: message || '',
     reasoning_content: '',
     thinkingStatus: 'start',
@@ -220,36 +163,45 @@ function addMessage(message: string, isUser: boolean) {
     noStyle: !isUser,
   };
   bubbleItems.value.push(obj);
-  // 清空文件列表
-  filesStore.setFilesList([]);
+  chatStore.setChatMap(`${route.params?.id}`, bubbleItems.value);
   return obj;
 }
-function fileView(url: any) {
-  window.open(url);
-}
-// 展开收起 事件展示
-function handleChange(payload: { value: boolean; status: ThinkingStatus }) {
-  console.log('value', payload.value, 'status', payload.status);
-}
-
-function handleDeleteCard(_item: FilesCardProps, index: number) {
-  filesStore.deleteFileByIndex(index);
-}
-
 watch(
-  () => filesStore.filesList.length,
-  (val) => {
-    if (val > 0) {
-      nextTick(() => {
-        senderRef.value?.openHeader();
-      });
-    }
-    else {
-      nextTick(() => {
-        senderRef.value?.closeHeader();
-      });
+  () => route.params?.id,
+  async (_id_) => {
+    if (_id_) {
+      if (_id_ !== 'not_login') {
+        // 判断的当前会话id是否有聊天记录，有缓存则直接赋值展示
+        if (chatStore.chatMap[`${_id_}`] && chatStore.chatMap[`${_id_}`].length) {
+          bubbleItems.value = chatStore.chatMap[`${_id_}`] as MessageItem[];
+          // 滚动到底部
+          setTimeout(() => {
+            bubbleListRef.value?.scrollToBottom();
+          }, 350);
+          return;
+        }
+
+        // 请求聊天记录后，赋值空消息占位，避免页面报错
+        bubbleItems.value = new Array<MessageItem>();
+
+        // 滚动到底部
+        setTimeout(() => {
+          bubbleListRef.value?.scrollToBottom();
+        }, 350);
+      }
+
+      // 如果本地有发送内容 ，则直接发送
+      const v = localStorage.getItem('chatContent');
+      if (v) {
+        // 发送消息
+        setTimeout(() => {
+          startSSE(v);
+        }, 350);
+        localStorage.removeItem('chatContent');
+      }
     }
   },
+  { immediate: true, deep: true },
 );
 </script>
 
@@ -257,13 +209,6 @@ watch(
   <div class="chat-with-id-container">
     <div class="chat-warp">
       <BubbleList ref="bubbleListRef" :list="bubbleItems" max-height="calc(100vh - 240px)">
-        <template #header="{ item }">
-          <Thinking
-            v-if="item.reasoning_content" v-model="item.thinlCollapse" :content="item.reasoning_content"
-            :status="item.thinkingStatus" class="thinking-chain-warp" @change="handleChange"
-          />
-        </template>
-
         <template #content="{ item }">
           <!-- chat 内容走 markdown -->
           <XMarkdown v-if="item.content && item.role === 'system'" :markdown="item.content" class="markdown-body" :themes="{ light: 'github-light', dark: 'github-dark' }" default-theme-mode="dark" />
@@ -271,66 +216,16 @@ watch(
           <div v-if="item.content && item.role === 'user'" class="user-content">
             {{ item.content }}
           </div>
-          <!-- 如果item.files 有值，则显示文件列表 -->
-          <div v-if="item.files && item.files.length > 0" class="file-list">
-            <FilesCard
-              v-for="(file, index) in item.files"
-              :key="index" :item="file" :name="file.name"
-              :url="file.url"
-              :img-variant="file.imgVariant"
-              :hover-style="{
-                'box-shadow': '0 2px 12px 0 rgba(0, 0, 0, 0.1)',
-                'border-color': 'green',
-                'background-color': 'rgba(255, 0, 0, 0.1)',
-              }"
-              @click="fileView(file.url)"
-            />
-          </div>
         </template>
       </BubbleList>
 
       <Sender
-        ref="senderRef" v-model="inputValue" class="chat-defaul-sender" :auto-size="{
-          maxRows: 6,
-          minRows: 2,
-        }" variant="updown" clearable allow-speech :loading="isLoading" @submit="startSSE" @cancel="cancelSSE"
-      >
-        <template #header>
-          <div class="sender-header p-12px pt-6px pb-0px">
-            <Attachments :items="filesStore.filesList" :hide-upload="true" @delete-card="handleDeleteCard">
-              <template #prev-button="{ show, onScrollLeft }">
-                <div
-                  v-if="show"
-                  class="prev-next-btn left-8px flex-center w-22px h-22px rounded-8px border-1px border-solid border-[rgba(0,0,0,0.08)] c-[rgba(0,0,0,.4)] hover:bg-#f3f4f6 bg-#fff font-size-10px"
-                  @click="onScrollLeft"
-                >
-                  <el-icon>
-                    <ArrowLeftBold />
-                  </el-icon>
-                </div>
-              </template>
-
-              <template #next-button="{ show, onScrollRight }">
-                <div
-                  v-if="show"
-                  class="prev-next-btn right-8px flex-center w-22px h-22px rounded-8px border-1px border-solid border-[rgba(0,0,0,0.08)] c-[rgba(0,0,0,.4)] hover:bg-#f3f4f6 bg-#fff font-size-10px"
-                  @click="onScrollRight"
-                >
-                  <el-icon>
-                    <ArrowRightBold />
-                  </el-icon>
-                </div>
-              </template>
-            </Attachments>
-          </div>
-        </template>
-        <template #prefix>
-          <div class="flex-1 flex items-center gap-8px flex-none w-fit overflow-hidden">
-            <FilesSelect />
-            <ModelSelect />
-          </div>
-        </template>
-      </Sender>
+        ref="senderRef"
+        v-model="inputValue" class="chat-defaul-sender" :auto-size="{
+          maxRows: 8,
+          minRows: 4,
+        }" clearable :loading="isLoading" @submit="startSSE" @cancel="cancelSSE"
+      />
     </div>
   </div>
 </template>
