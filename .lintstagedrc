@@ -1,0 +1,14 @@
+{
+  "*.{ts,tsx}": [
+    "eslint --fix --no-ignore",
+    "git add"
+  ],
+  "*.{json,js,jsx}": [
+    "eslint --fix --no-ignore",
+    "git add"
+  ],
+  "*.vue": [
+    "eslint --fix --no-ignore",
+    "git add"
+  ]
+}
