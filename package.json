@@ -1,23 +1,16 @@
 {
-  "name": "ruoyi-element-ai",
+  "name": "woniu-element-ai",
   "type": "module",
   "version": "0.0.0",
   "private": true,
-  "description": "ruoyi-element-ai open-source PC AI template",
+  "description": "woniu-element-ai",
   "author": {
-    "name": "HeJiaYue520",
-    "email": "2834007710@qq.com",
-    "url": "https://github.com/HeJiaYue520/HeJiaYue520"
+    "name": "mayuhang",
+    "email": "395466081@qq.com",
+    "url": "https://www.woniuxy.com"
   },
   "license": "MIT",
-  "homepage": "https://github.com/element-plus-x/ruoyi-element-ai",
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:element-plus-x/ruoyi-element-ai.git"
-  },
-  "bugs": {
-    "url": "https://github.com/element-plus-x/ruoyi-element-ai/issues"
-  },
+  "homepage": "https://www.woniuxy.com",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
