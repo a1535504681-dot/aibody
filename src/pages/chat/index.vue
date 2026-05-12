@@ -13,6 +13,7 @@ const sessionId = computed(() => route.params?.id);
     <ChatDefaul v-if="!sessionId" />
     <!-- 带id的聊天页面 -->
     <ChatWithId v-else />
+    <router-view />
   </div>
 </template>
 

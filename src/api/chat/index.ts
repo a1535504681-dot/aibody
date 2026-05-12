@@ -3,7 +3,7 @@ import { get, post } from '@/utils/request';
 
 // 发送消息
 export function send(data: SendDTO) {
-  return post<null>(`/ai/sse`, data);
+  return post<null>(`/ai/sse`, { content: data.message?.content });
 }
 
 // 新增对应会话聊天记录

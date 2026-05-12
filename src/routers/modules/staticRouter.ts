@@ -31,6 +31,11 @@ export const layoutRouter: RouteRecordRaw[] = [
           isDefaultChat: false,
         },
       },
+      {
+        path: '/chatAirag',
+        name: 'chatAirag',
+        component: () => import('@/pages/chat/layouts/chatAiRag/AiRag.vue'),
+      },
     ],
   },
 ];

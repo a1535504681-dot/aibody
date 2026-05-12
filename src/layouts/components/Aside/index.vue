@@ -104,6 +104,12 @@ function handleCreatChat() {
                 </el-icon>
                 <span>AI-绘画</span>
               </el-menu-item>
+              <el-menu-item index="/chatAirag">
+                <el-icon>
+                  <Document />
+                </el-icon>
+                <span>AI-布丁</span>
+              </el-menu-item>
               <el-popover
                 :width="300" placement="right-start"
                 popper-style="box-shadow: 0 2px 12px rgba(0,0,0,0.1);width:170px; padding: 8px;border-radius: 18px;"
