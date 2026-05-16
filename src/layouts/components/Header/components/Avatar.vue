@@ -4,6 +4,8 @@ import Popover from '@/components/Popover/index.vue';
 import SvgIcon from '@/components/SvgIcon/index.vue';
 import { useUserStore } from '@/stores';
 import { useSessionStore } from '@/stores/modules/session';
+import { ca } from 'element-plus/es/locale';
+import router from '../../../../routers';
 
 const userStore = useUserStore();
 const sessionStore = useSessionStore();
@@ -39,6 +41,11 @@ const popoverList = ref([
     key: '4',
     title: '退出登录',
     icon: 'logout-box-r-line',
+  },
+   {
+    key: '5',
+    title: '后台管理',
+    icon: 'book-mark-fill',
   },
 ]);
 
@@ -82,7 +89,9 @@ function handleClick(item: any) {
           // });
         });
       break;
-    default:
+    case'5':router.push('/admin')
+        break;
+      default:
       break;
   }
 }

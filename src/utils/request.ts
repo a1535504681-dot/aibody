@@ -30,7 +30,7 @@ function jwtPlugin(): HookFetchPlugin<BaseResponse> {
       return config;
     },
     afterResponse: async (response) => {
-      // console.log(response);
+      console.log(response);
       if (response.result?.code === 200) {
         return response;
       }

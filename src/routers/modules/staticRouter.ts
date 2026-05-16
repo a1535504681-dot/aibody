@@ -1,6 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router';
 import { HOME_URL } from '@/config';
-
 // LayoutRouter[布局路由]
 export const layoutRouter: RouteRecordRaw[] = [
   {
@@ -36,7 +35,27 @@ export const layoutRouter: RouteRecordRaw[] = [
         name: 'chatAirag',
         component: () => import('@/pages/chat/layouts/chatAiRag/AiRag.vue'),
       },
-    ],
+    ]
+  }, {
+    path: '/admin',
+    name:'admin',
+    component: () => import('@/pages/AdminLayout/AdminLayout.vue'),
+    children:[
+      {
+        path: '/admin/user',
+        name: 'user',
+        component: () => import('@/pages/AdminLayout/secondarypage/User.vue')
+      }, {
+        path: '/admin/Avatar',
+        name: 'Avatar',
+        component: () => import('@/pages/AdminLayout/secondarypage/Avatar.vue')
+      },
+      {
+        path: '/admin/menu',
+        name: 'menu',
+        component: () => import('@/pages/AdminLayout/secondarypage/Menu.vue')
+      }
+    ]
   },
 ];
 
