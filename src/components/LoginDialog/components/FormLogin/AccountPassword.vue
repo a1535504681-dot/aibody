@@ -29,7 +29,7 @@ async function handleSubmit() {
     await formRef.value?.validate();
     const res = await login(formModel);
     console.log('res', res);
-    res.data.token && userStore.setToken(res.data.token);
+    res.data && userStore.setToken(res.data);
     res.data && userStore.setUserInfo(res.data);
     ElMessage.success('登录成功');
     userStore.closeLoginDialog();
