@@ -4,6 +4,7 @@ import { HOME_URL } from '@/config';
 export const layoutRouter: RouteRecordRaw[] = [
   {
     path: '/',
+    name: 'layout',
     redirect: HOME_URL,
     component: () => import('@/layouts/index.vue'),
     children: [
@@ -35,27 +36,29 @@ export const layoutRouter: RouteRecordRaw[] = [
         name: 'chatAirag',
         component: () => import('@/pages/chat/layouts/chatAiRag/AiRag.vue'),
       },
-    ]
-  }, {
+    ],
+  },
+  {
     path: '/admin',
-    name:'admin',
+    name: 'admin',
     component: () => import('@/pages/AdminLayout/AdminLayout.vue'),
-    children:[
+    children: [
       {
         path: '/admin/user',
         name: 'user',
-        component: () => import('@/pages/AdminLayout/secondarypage/User.vue')
-      }, {
+        component: () => import('@/pages/AdminLayout/secondarypage/User.vue'),
+      },
+      {
         path: '/admin/Avatar',
         name: 'Avatar',
-        component: () => import('@/pages/AdminLayout/secondarypage/Avatar.vue')
+        component: () => import('@/pages/AdminLayout/secondarypage/Avatar.vue'),
       },
       {
         path: '/admin/menu',
         name: 'menu',
-        component: () => import('@/pages/AdminLayout/secondarypage/Menu.vue')
-      }
-    ]
+        component: () => import('@/pages/AdminLayout/secondarypage/Menu.vue'),
+      },
+    ],
   },
 ];
 

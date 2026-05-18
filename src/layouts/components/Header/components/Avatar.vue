@@ -4,7 +4,6 @@ import Popover from '@/components/Popover/index.vue';
 import SvgIcon from '@/components/SvgIcon/index.vue';
 import { useUserStore } from '@/stores';
 import { useSessionStore } from '@/stores/modules/session';
-import { ca } from 'element-plus/es/locale';
 import router from '../../../../routers';
 
 const userStore = useUserStore();
@@ -42,10 +41,11 @@ const popoverList = ref([
     title: '退出登录',
     icon: 'logout-box-r-line',
   },
-   {
+  {
     key: '5',
     title: '后台管理',
     icon: 'book-mark-fill',
+    role: '1',
   },
 ]);
 
@@ -74,6 +74,7 @@ function handleClick(item: any) {
         .then(async () => {
           // 在这里执行退出方法
           await userStore.logout();
+          // setRouteLoaded(false)
           // 清空回话列表并回到默认页
           await sessionStore.requestSessionList(1, true);
           await sessionStore.createSessionBtn();
@@ -89,9 +90,9 @@ function handleClick(item: any) {
           // });
         });
       break;
-    case'5':router.push('/admin')
-        break;
-      default:
+    case '5':router.push('/admin');
+      break;
+    default:
       break;
   }
 }

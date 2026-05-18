@@ -7,6 +7,7 @@ import { useRouter } from 'vue-router';
 import { login } from '@/api';
 import { useUserStore } from '@/stores';
 import { useLoginFormStore } from '@/stores/modules/loginForm';
+import { initPermission } from '@/utils/initPermission';
 
 const userStore = useUserStore();
 const loginFromStore = useLoginFormStore();
@@ -32,6 +33,7 @@ async function handleSubmit() {
     res.data && userStore.setToken(res.data);
     res.data && userStore.setUserInfo(res.data);
     ElMessage.success('登录成功');
+    await initPermission();
     userStore.closeLoginDialog();
     // 立刻获取回话列表
     router.replace('/');

@@ -1,16 +1,15 @@
 <!-- Aside 侧边栏 -->
 <script setup lang="ts">
-import {
-  Document,
-  Menu as IconMenu,
-  Location,
-} from '@element-plus/icons-vue';
 import { useRoute } from 'vue-router';
 import logo from '@/assets/images/logo.svg';
 import SvgIcon from '@/components/SvgIcon/index.vue';
 import Collapse from '@/layouts/components/Header/components/Collapse.vue';
-import { useDesignStore } from '@/stores';
+import { useDesignStore, useUserStore } from '@/stores';
 import { useSessionStore } from '@/stores/modules/session';
+
+const userStore = useUserStore();
+
+const menus = computed(() => userStore.menus || []);
 
 const route = useRoute();
 const designStore = useDesignStore();
@@ -67,7 +66,40 @@ function handleCreatChat() {
         </div>
         <Collapse class="ml-auto" />
       </div>
+      <el-menu
+        background-color="transparent"
+        class="el-menu-vertical-demo"
+        router
+        :default-active="route.path"
+      >
+        <template v-for="menu in menus" :key="menu.id">
+          <!-- 有子菜单 -->
+          <el-sub-menu
+            v-if="menu.children && menu.children.length && menu.children != null"
+            :index="menu.path"
+          >
+            <template #title>
+              <span>{{ menu.menuName }}</span>
+            </template>
 
+            <el-menu-item
+              v-for="child in menu.children"
+              :key="child.id"
+              :index="child.path"
+            >
+              {{ child.menuName }}
+            </el-menu-item>
+          </el-sub-menu>
+
+          <!-- 普通菜单 -->
+          <el-menu-item
+            v-else
+            :index="menu.path"
+          >
+            {{ menu.menuName }}
+          </el-menu-item>
+        </template>
+      </el-menu>
       <div class="aside-body">
         <div class="creat-chat-btn-wrapper">
           <div class="creat-chat-btn" @click="handleCreatChat">
@@ -82,65 +114,7 @@ function handleCreatChat() {
           <el-menu
             background-color="transparent" class="el-menu-vertical-demo" router @open="handleOpen"
             @close="handleClose"
-          >
-            <el-menu-item-group>
-              <template #title>
-                <el-icon><IconMenu /></el-icon>
-                <span>业务菜单</span>
-              </template>
-              <el-menu-item index="1">
-                <el-icon>
-                  <Location />
-                </el-icon>
-                <span>AI-RAG</span>
-              </el-menu-item>
-              <el-menu-item index="2">
-                <el-icon><IconMenu /></el-icon>
-                <span>AI-PPT</span>
-              </el-menu-item>
-              <el-menu-item index="3">
-                <el-icon>
-                  <Document />
-                </el-icon>
-                <span>AI-绘画</span>
-              </el-menu-item>
-              <el-menu-item index="/chatAirag">
-                <el-icon>
-                  <Document />
-                </el-icon>
-                <span>AI-布丁</span>
-              </el-menu-item>
-              <el-popover
-                :width="300" placement="right-start"
-                popper-style="box-shadow: 0 2px 12px rgba(0,0,0,0.1);width:170px; padding: 8px;border-radius: 18px;"
-              >
-                <template #reference>
-                  <el-menu-item>
-                    <template #title>
-                      <el-icon><IconMenu /></el-icon>
-                      <span>更多</span>
-                    </template>
-                  </el-menu-item>
-                </template>
-                <template #default>
-                  <el-menu-item-group>
-                    <el-menu-item index="4">
-                      <el-icon>
-                        <IconMenu />
-                      </el-icon>
-                      <span>AI-翻译</span>
-                    </el-menu-item>
-                    <el-menu-item index="5">
-                      <el-icon>
-                        <IconMenu />
-                      </el-icon>
-                      <span>AI-代码</span>
-                    </el-menu-item>
-                  </el-menu-item-group>
-                </template>
-              </el-popover>
-            </el-menu-item-group>
-          </el-menu>
+          />
         </div>
       </div>
     </div>

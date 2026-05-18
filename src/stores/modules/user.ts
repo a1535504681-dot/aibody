@@ -6,54 +6,93 @@ export const useUserStore = defineStore(
   'user',
   () => {
     const token = ref<string>();
+
     const router = useRouter();
+    //       const isRouteLoaded = ref(false)
+
+    // const setRouteLoaded = (value: boolean) => {
+    //     isRouteLoaded.value = value
+    //               }
+
+    // token
     const setToken = (value: string) => {
       token.value = value;
     };
+
     const clearToken = () => {
       token.value = void 0;
     };
 
+    // 用户信息
     const userInfo = ref<LoginUser>();
+
     const setUserInfo = (value: LoginUser) => {
       userInfo.value = value;
     };
+
     const clearUserInfo = () => {
       userInfo.value = void 0;
     };
 
-    const logout = async () => {
-      // 如果需要调用接口，可以在这里调用
-      clearToken();
-      clearUserInfo();
-      router.replace({ name: 'chat' });
+    // ⭐ 动态菜单
+    const menus = ref<any[]>([]);
+
+    const setMenus = (value: any[]) => {
+      menus.value = value;
     };
 
-    // 新增：登录弹框状态
+    const clearMenus = () => {
+      menus.value = [];
+    };
+
+    // 退出登录
+    const logout = async () => {
+      clearToken();
+      clearUserInfo();
+      clearMenus();
+      router.replace({
+        name: 'chat',
+      });
+    };
+
+    // 登录弹框
     const isLoginDialogVisible = ref(false);
 
-    // 新增：打开弹框方法
     const openLoginDialog = () => {
       isLoginDialogVisible.value = true;
     };
 
-    // 新增：关闭弹框方法（可根据需求扩展）
     const closeLoginDialog = () => {
       isLoginDialogVisible.value = false;
     };
 
     return {
+      // token
       token,
       setToken,
       clearToken,
+
+      // user
       userInfo,
       setUserInfo,
       clearUserInfo,
+
+      // ⭐ menus
+      menus,
+      setMenus,
+      clearMenus,
+
+      // logout
       logout,
-      // 新增：暴露弹框状态和方法
+
+      // login dialog
       isLoginDialogVisible,
       openLoginDialog,
       closeLoginDialog,
+
+      //   //路由
+      // isRouteLoaded,
+      // setRouteLoaded,
     };
   },
   {
