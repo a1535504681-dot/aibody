@@ -8,7 +8,6 @@ export function generateRoutes(menus: any[]): RouteRecordRaw[] {
       name: menu.menuName,
     };
 
-    console.log(route, '进方法之前', menu);
 
     // ⭐ 页面组件
     if (menu.component) {
@@ -19,9 +18,6 @@ export function generateRoutes(menus: any[]): RouteRecordRaw[] {
     if (Array.isArray(menu.children) && menu.children.length > 0) {
       route.children = generateRoutes(menu.children);
     }
-    console.log('menu:', menu);
-    console.log('component:', menu.component);
-    console.log('route:', route);
     return route;
   });
 }

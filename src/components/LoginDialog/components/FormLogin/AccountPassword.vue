@@ -34,6 +34,10 @@ async function handleSubmit() {
     res.data && userStore.setUserInfo(res.data);
     ElMessage.success('登录成功');
     await initPermission();
+    userStore.setRouteLoaded(false)
+    console.log('登录成功:', userStore.isRouteLoaded)
+
+    
     userStore.closeLoginDialog();
     // 立刻获取回话列表
     router.replace('/');

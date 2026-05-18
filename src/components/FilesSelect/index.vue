@@ -43,7 +43,6 @@ async function up(file: any) {
   // formData.append('name', 'My File');
 
   const response = await api.post('/upload', formData).json();
-  console.log(response, '1111111111111111111111111');
 }
 onChange((files) => {
   if (!files)
@@ -62,7 +61,6 @@ onChange((files) => {
       imgVariant: 'square', // 图片预览的形状
       url: URL.createObjectURL(file), // 图片预览地址
     });
-    console.log('files', file);
     up(file);
   }
 

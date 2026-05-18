@@ -1,27 +1,30 @@
-import { getInfoApi } from '@/api/auth';
-import router from '@/routers';
-import { useUserStore } from '@/stores';
-import { generateRoutes } from '@/utils/generateRoutes';
+import { getInfoApi } from '@/api/auth'
+import router from '@/routers'
+import { useUserStore } from '@/stores'
+import { generateRoutes } from '@/utils/generateRoutes'
 
 export async function initPermission() {
-  const userStore = useUserStore();
+  const userStore = useUserStore()
 
-  // 获取用户信息
-  const res = await getInfoApi().json();
+  const res = await getInfoApi().json()
 
-  console.log('getInfo', res);
 
-  // 存用户信息
-  userStore.setUserInfo(res.data.user);
+  // 1. 存 store
+  userStore.setMenus(res.data.menus)
+  // userStore.setRoles(res.data.roles)  // 存角色id
 
-  // 存菜单
-  userStore.setMenus(res.data.menus);
+  
 
-  // 生成动态路由
-  const routes = generateRoutes(res.data.menus);
+  // 2. 生成路由
+  const routes = generateRoutes(res.data.menus)
 
-  // 动态添加routes
-  routes.forEach((route) => {
-    router.addRoute('layout', route);
-  });
+  // 3. 注册路由
+  routes.forEach(route => {
+    if (!router.hasRoute(route.name as string)) {
+      router.addRoute('layout', route)
+    }
+  })
+
+  // 4. ⚠️ 必须等待 router ready
+  await router.replace(router.currentRoute.value.fullPath)
 }

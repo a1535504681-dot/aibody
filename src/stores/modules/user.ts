@@ -8,11 +8,17 @@ export const useUserStore = defineStore(
     const token = ref<string>();
 
     const router = useRouter();
-    //       const isRouteLoaded = ref(false)
+          const isRouteLoaded = ref(false)
 
-    // const setRouteLoaded = (value: boolean) => {
-    //     isRouteLoaded.value = value
-    //               }
+    const setRouteLoaded = (value: boolean) => {
+        isRouteLoaded.value = value
+                  }
+                  //存角色id
+// const roles = ref<string[]>([])
+
+// const setRoles = (list: string[]) => {
+//   roles.value = list
+// }
 
     // token
     const setToken = (value: string) => {
@@ -90,9 +96,9 @@ export const useUserStore = defineStore(
       openLoginDialog,
       closeLoginDialog,
 
-      //   //路由
-      // isRouteLoaded,
-      // setRouteLoaded,
+        //路由
+      isRouteLoaded,
+      setRouteLoaded,
     };
   },
   {
