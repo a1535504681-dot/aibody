@@ -21,6 +21,12 @@ export const useUserStore = defineStore(
 // }
 
     // token
+
+const userId = ref<number | null>(null)
+const setUserId = (id: number) => {
+  userId.value = id
+}
+
     const setToken = (value: string) => {
       token.value = value;
     };
@@ -99,6 +105,9 @@ export const useUserStore = defineStore(
         //路由
       isRouteLoaded,
       setRouteLoaded,
+      //角色id
+      userId,
+      setUserId,
     };
   },
   {

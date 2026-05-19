@@ -13,6 +13,9 @@ export async function initPermission() {
   userStore.setMenus(res.data.menus)
   // userStore.setRoles(res.data.roles)  // 存角色id
 
+userStore.setUserId(res.data.user.id)
+
+
   
 
   // 2. 生成路由

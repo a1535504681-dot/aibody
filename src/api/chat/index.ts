@@ -6,6 +6,12 @@ export function send(data: SendDTO) {
   return post<null>(`/ai/sse`, { content: data.message?.content });
 }
 
+// 发送消息
+export function sendbody(data: SendDTO) {
+  return post<null>(`/ai/analysis`, { content: data.message?.content }).json();
+}
+
+
 // 新增对应会话聊天记录
 export function addChat(data: ChatMessageVo) {
   return post('/system/message', data).json();

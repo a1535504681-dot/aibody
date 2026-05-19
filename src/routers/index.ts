@@ -29,12 +29,6 @@ router.beforeEach(async (to, from, next) => {
 
   start()
 
-  console.log('🔥 enter guard', {
-    to: to.path,
-    token: userStore.token,
-    isRouteLoaded: userStore.isRouteLoaded,
-    isInit
-  })
 
   // ⭐ 1. 已在登录页，直接放行（防死循环关键）
   if (to.path === '/chat/nut_login') {
