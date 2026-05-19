@@ -139,6 +139,31 @@ import { addUserHealth,getUserHealth } from "../../api/aibody";
 import { onMounted } from "vue"
 import { useUserStore } from '@/stores'
 
+const profile = ref({
+
+  userId: userStore.userId,
+
+  age: '',
+
+  sex: '',
+
+  height: '',
+
+  weight: '',
+
+  target_weight: '',
+
+  goal: '',
+
+  activityLevel: '',
+
+  bmi: '',
+
+  bodyFat: ''
+
+})
+
+
 
 const userStore = useUserStore()
 
@@ -192,29 +217,6 @@ const activeNames = ref(['1'])
 /**
  * 用户档案
  */
-const profile = ref({
-
-  userId: userStore.userId,
-
-  age: '',
-
-  sex: '',
-
-  height: '',
-
-  weight: '',
-
-  target_weight: '',
-
-  goal: '',
-
-  activityLevel: '',
-
-  bmi: '',
-
-  bodyFat: ''
-
-})
 
 /**
  * BMI计算
