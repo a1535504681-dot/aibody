@@ -79,7 +79,7 @@
               </el-form-item>
 
               <el-form-item label="目标体重">
-                <el-input v-model="profile.targetWeight"/>
+                <el-input v-model="profile.target_weight"/>
               </el-form-item>
 
               <el-form-item label="目标">
@@ -194,7 +194,7 @@ const activeNames = ref(['1'])
  */
 const profile = ref({
 
-  userId: '',
+  userId: userStore.userId,
 
   age: '',
 
@@ -204,7 +204,7 @@ const profile = ref({
 
   weight: '',
 
-  targetWeight: '',
+  target_weight: '',
 
   goal: '',
 
@@ -415,7 +415,7 @@ const aiResult = {
  */
 const saveProfile = async () => {
 
-  console.log(profile.value)
+  console.log(profile.value,"2222222222222222",userStore.userId)
 
 
    const res =  await addUserHealth(profile.value)

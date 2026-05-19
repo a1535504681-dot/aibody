@@ -16,6 +16,7 @@ export async function initPermission() {
 userStore.setUserId(res.data.user.id)
 
 
+
   
 
   // 2. 生成路由
