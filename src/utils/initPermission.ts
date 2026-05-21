@@ -12,6 +12,8 @@ export async function initPermission() {
   // 1. 存 store
   userStore.setMenus(res.data.menus)
   // userStore.setRoles(res.data.roles)  // 存角色id
+  console.log(res.data.menus,"menu111111111111");
+  
 
 userStore.setUserId(res.data.user.id)
 

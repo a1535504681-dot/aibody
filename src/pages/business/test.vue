@@ -6,13 +6,11 @@
       AI 健康助手
     </div>
 
-    <!-- 主区域 -->
     <div class="main-container">
 
-      <!-- 左边聊天区域 -->
+      <!-- 左侧聊天 -->
       <div class="chat-container">
 
-        <!-- 消息列表 -->
         <div class="message-list">
 
           <div
@@ -26,7 +24,6 @@
 
         </div>
 
-        <!-- 输入区域 -->
         <div class="input-area">
 
           <el-input
@@ -36,10 +33,7 @@
             clearable
           />
 
-          <el-button
-            type="primary"
-            @click="sendMessage"
-          >
+          <el-button type="primary" @click="sendMessage">
             发送
           </el-button>
 
@@ -47,27 +41,22 @@
 
       </div>
 
-      <!-- 右边用户档案 -->
+      <!-- 右侧 -->
       <div class="profile-container">
 
         <el-collapse v-model="activeNames">
 
-          <el-collapse-item
-            title="身体健康档案"
-            name="1"
-          >
+          <!-- 基础档案 -->
+          <el-collapse-item title="身体健康档案" name="1">
 
-            <el-form
-              label-width="100px"
-              :model="profile"
-            >
+            <el-form label-width="100px" :model="profile">
 
               <el-form-item label="年龄">
                 <el-input v-model="profile.age"/>
               </el-form-item>
 
               <el-form-item label="性别">
-                <el-input v-model="profile.sex"/>
+                <el-input v-model="profile.gender"/>
               </el-form-item>
 
               <el-form-item label="身高(cm)">
@@ -79,7 +68,7 @@
               </el-form-item>
 
               <el-form-item label="目标体重">
-                <el-input v-model="profile.target_weight"/>
+                <el-input v-model="profile.targetWeight"/>
               </el-form-item>
 
               <el-form-item label="目标">
@@ -90,30 +79,18 @@
                 <el-input v-model="profile.activityLevel"/>
               </el-form-item>
 
-              <!-- BMI 自动显示 -->
               <el-form-item label="BMI">
-
                 <el-tag type="success">
-
                   {{ profile.bmi }}
-
-                  <template v-if="bmiText">
-                    （{{ bmiText }}）
-                  </template>
-
+                  <span v-if="bmiText">（{{ bmiText }}）</span>
                 </el-tag>
-
               </el-form-item>
 
               <el-form-item label="体脂率">
                 <el-input v-model="profile.bodyFat"/>
               </el-form-item>
 
-              <el-button
-                type="success"
-                style="width:100%"
-                @click="saveProfile"
-              >
+              <el-button type="success" style="width:100%" @click="saveProfile">
                 保存数据
               </el-button>
 
@@ -121,500 +98,399 @@
 
           </el-collapse-item>
 
+          <!-- 体重记录 -->
+          <el-collapse-item title="周期历史体重记录" name="2">
+
+            <div class="weight-history">
+
+              <div
+                v-for="(item,index) in weightList"
+                :key="index"
+                class="weight-item"
+              >
+
+                <div class="date-box">
+                  <div class="date">{{ item.date }}</div>
+                  <div class="time">{{ item.time }}</div>
+                </div>
+
+                <div class="weight">
+                  {{ item.weight }} kg
+                </div>
+
+              </div>
+
+              <div v-if="weightList.length === 0" class="empty">
+                暂无体重记录
+              </div>
+
+            </div>
+
+          </el-collapse-item>
+          <div class="report-btn-box">
+  <el-button
+    type="warning"
+    size="large"
+    style="width:100%;margin-top:20px"
+    @click="generateReport"
+    :loading="reportLoading"
+  >
+    生成 AI 健康报告
+  </el-button>
+</div>
+
         </el-collapse>
 
       </div>
 
     </div>
-
   </div>
 </template>
 
 <script setup>
-
-import {ref, computed} from "vue";
-import {ElMessage} from "element-plus";
-import {sendbody} from "../../api";
-import { addUserHealth,getUserHealth } from "../../api/aibody";
-import { onMounted } from "vue"
+import { ref, computed, onMounted } from "vue"
+import { ElMessage } from "element-plus"
+import { sendbody } from "../../api"
+import { addUserHealth, getUserHealth, getWeightHistory } from "../../api/aibody"
 import { useUserStore } from '@/stores'
-
-const profile = ref({
-
-  userId: userStore.userId,
-
-  age: '',
-
-  sex: '',
-
-  height: '',
-
-  weight: '',
-
-  target_weight: '',
-
-  goal: '',
-
-  activityLevel: '',
-
-  bmi: '',
-
-  bodyFat: ''
-
-})
-
-
 
 const userStore = useUserStore()
 
-/**
- * 聊天记录
- */
-const messages = ref([
-  {
-    role: 'ai',
-    content: '你好，请输入你的身体信息，例如：我22岁 男 175cm 70kg 想减脂'
-  }
-])
-/**
- * 加载初始数据
- */
-onMounted(() => {
-  loadProfile()
+/** ---------------- 用户档案 ---------------- */
+const profile = ref({
+  userId: userStore.userId,
+  age: '',
+  gender: '',
+  height: '',
+  weight: '',
+  targetWeight: '',
+  goal: '',
+  activityLevel: '',
+  bmi: '',
+  bodyFat: ''
 })
 
-const loadProfile = async () => {
+/** ---------------- 体重记录 ---------------- */
+const weightList = ref([])
 
+const loadWeightHistory = async () => {
   try {
-
-    const res = await getUserHealth(userStore.userId)
-    console.log("userid",res.data);
-    
+    const res = await getWeightHistory(userStore.userId)
 
     if (res.code === 200 && res.data) {
 
-      profile.value = {
-        ...profile.value,
-        ...res.data
-      }
+      weightList.value = res.data.map(item => ({
+        date: item.recordTime?.slice(0, 10),
+        time: item.recordTime?.slice(11, 16),
+        weight: item.weight
+      }))
     }
 
   } catch (e) {
-
-    console.log("加载用户档案失败", e)
+    console.log("加载体重记录失败", e)
   }
 }
-/**
- * 输入框
- */
+
+/** ---------------- 聊天 ---------------- */
+const messages = ref([
+  {
+    role: 'ai',
+    content: '你好，健康助手很高兴为你服务'
+  }
+])
+
 const inputText = ref('')
 
-/**
- * 折叠面板
- */
 const activeNames = ref(['1'])
 
-/**
- * 用户档案
- */
-
-/**
- * BMI计算
- */
-const calculateBMI = (height, weight) => {
-
-  if (!height || !weight) {
-
-    return ''
-  }
-
-  // cm -> m
-  const h = height / 100
-
-  return (weight / (h * h)).toFixed(2)
-
-}
-
-/**
- * BMI状态
- */
+/** ---------------- BMI ---------------- */
 const bmiText = computed(() => {
-
   const bmi = Number(profile.value.bmi)
+  if (!bmi) return ''
 
-  if (!bmi) {
-
-    return ''
-  }
-
-  if (bmi < 18.5) {
-
-    return '偏瘦'
-  }
-
-  if (bmi < 24) {
-
-    return '正常'
-  }
-
-  if (bmi < 28) {
-
-    return '超重'
-  }
-
+  if (bmi < 18.5) return '偏瘦'
+  if (bmi < 24) return '正常'
+  if (bmi < 28) return '超重'
   return '肥胖'
-
 })
 
-/**
- * 发送消息
- */
+/** ---------------- 加载 ---------------- */
+const loadProfile = async () => {
+  try {
+    const res = await getUserHealth(userStore.userId)
+
+    if (res.code === 200 && res.data) {
+      profile.value = { ...profile.value, ...res.data }
+    }
+
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+onMounted(() => {
+  loadProfile()
+  loadWeightHistory()
+})
+
+/** ---------------- AI发送 ---------------- */
+const calculateBMI = (h, w) => {
+  if (!h || !w) return ''
+  const m = h / 100
+  return (w / (m * m)).toFixed(2)
+}
+
 const sendMessage = async () => {
 
-  // 空判断
-  if (!inputText.value.trim()) {
+  if (!inputText.value.trim()) return
 
-    return
-  }
-
-  /**
-   * 保存用户输入
-   */
   const userMessage = inputText.value
 
-  // 添加用户消息
-  messages.value.push({
-
-    role: 'user',
-
-    content: userMessage
-
-  })
-
-  // 清空输入框
+  messages.value.push({ role: 'user', content: userMessage })
   inputText.value = ''
 
   try {
 
-    /**
-     * 调用AI接口
-     */
+    const res = await sendbody({
+      message: {
+        content: userMessage,
+        role: 'user'
+      }
+    })
+
+    const data = res.data.data || {}
+
+    const aiResult = {
+      ...(data.gender && { gender: data.gender }),
+      ...(data.age && { age: data.age }),
+      ...(data.height && { height: data.height }),
+      ...(data.weight && { weight: data.weight }),
+      ...(data.level && { goal: data.level }),
+      ...(data.targetWeight && { targetWeight: data.targetWeight }),
+      ...(data.height && data.weight && {
+        bmi: calculateBMI(data.height, data.weight)
+      })
+    }
+
+    profile.value = { ...profile.value, ...aiResult }
+
+    messages.value.push({
+      role: 'ai',
+      content: res.data.message || '暂无AI回复'
+    })
+
+  } catch (e) {
+    console.log(e)
+    ElMessage.error("AI识别失败")
+  }
+}
+const reportLoading = ref(false)
+
+const reportContent = ref('')
+/** ---------------- 生成AI报告 ---------------- */
+/** ---------------- 生成AI报告 ---------------- */
+const generateReport = async () => {
+
+  try {
+
+    reportLoading.value = true
+
+    // 用户数据
+    const params = {
+      profile: profile.value,
+      weightHistory: weightList.value
+    }
+
+    // 拼接AI提示词
+    const prompt = `
+请根据以下用户身体数据生成一份详细健康分析报告。
+
+【用户基础信息】
+${JSON.stringify(params.profile, null, 2)}
+
+【历史体重记录】
+${JSON.stringify(params.weightHistory, null, 2)}
+
+请从以下几个方面进行分析：
+
+1.BMI分析
+2.体重变化趋势
+3.是否健康
+4.减脂/增肌建议
+5.饮食建议
+6.运动建议
+7.作息建议
+8.未来30天改善计划
+
+请使用专业且容易理解的中文回答。
+`
+
+    // 调AI接口
     const res = await sendbody({
 
       message: {
-
-        content: userMessage,
-
-        role: 'user'
-
+        role: 'user',
+        content: prompt
       }
 
     })
 
-    console.log(res)
+    console.log("AI报告返回：", res)
 
-    /**
-     * AI返回数据
-     */
-/**
- * AI返回数据
- */
-const data = res.data
+    // 兼容不同返回结构
+    const report =
+      res?.data?.message ||
+      res?.data?.data?.message ||
+      res?.data?.data ||
+      '暂无分析结果'
 
-/**
- * 组装数据
- * 有值才覆盖
- */
-const aiResult = {
+    // 保存报告
+    reportContent.value = report
+    console.log(reportContent,"报告！！！！！");
+    
 
-  ...(data.sex && {
-
-    sex: data.sex
-
-  }),
-
-  ...(data.age && {
-
-    age: data.age
-
-  }),
-
-  ...(data.height && {
-
-    height: data.height
-
-  }),
-
-  ...(data.weight && {
-
-    weight: data.weight
-
-  }),
-
-  ...(data.level && {
-
-    goal: data.level
-
-  }),
-
-  ...(
-    data.height &&
-    data.weight && {
-
-      bmi: calculateBMI(data.height, data.weight)
-
-    }
-  ), ...(data.target_weight && {
-
-    target_weight: data.target_weight
-
-  })
-
-}
-
-    /**
-     * AI回复
-     */
+    // 放入聊天区
     messages.value.push({
-
       role: 'ai',
-
-      content: '已成功识别你的身体数据'
-
+      content: report
     })
 
-    /**
-     * 渲染右边
-     */
-    profile.value = {
-
-      ...profile.value,
-
-      ...aiResult
-
-    }
+    ElMessage.success("AI报告生成成功")
 
   } catch (e) {
 
-    console.log(e)
+    console.log("AI报告生成失败", e)
 
-    messages.value.push({
+    ElMessage.error("生成失败")
 
-      role: 'ai',
+  } finally {
 
-      content: '识别失败，请重新输入'
-
-    })
-
-    ElMessage.error("AI识别失败")
+    reportLoading.value = false
 
   }
-
 }
-
-/**
- * 保存用户数据
- */
+/** ---------------- 保存 ---------------- */
 const saveProfile = async () => {
+  const res = await addUserHealth(profile.value)
 
-  console.log(profile.value,"2222222222222222",userStore.userId)
-
-
-   const res =  await addUserHealth(profile.value)
-   console.log(res);
-   if(res.code==200){
+  if (res.code === 200) {
     ElMessage.success("保存成功")
-   }
-
-  /**
-   * 这里调用保存接口
-   */
+  }
 }
+
+/** ---------------- AI报告 ---------------- */
+
+
 
 </script>
 
 <style scoped>
-
 .health-page {
-
   width: 100%;
-
-  height: 100vh;
-
+  height: 90vh;
   background: #f5f7fa;
-
   padding: 20px;
-
   box-sizing: border-box;
-
-  overflow: hidden;
-
   display: flex;
-
   flex-direction: column;
 }
-
-/* 标题 */
 
 .title {
-
   height: 60px;
-
   line-height: 60px;
-
   font-size: 28px;
-
   font-weight: bold;
-
   text-align: center;
-
   background: white;
-
   border-radius: 12px;
-
   margin-bottom: 20px;
-
-  flex-shrink: 0;
 }
-
-/* 主区域 */
 
 .main-container {
-
   flex: 1;
-
   display: flex;
-
   gap: 20px;
-
   overflow: hidden;
-
-  min-height: 0;
 }
-
-/* 左边聊天 */
 
 .chat-container {
-
   flex: 1;
-
-  height: 100%;
-
   background: white;
-
   border-radius: 12px;
-
-  display: flex;
-
-  flex-direction: column;
-
   padding: 20px;
-
-  box-sizing: border-box;
-
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
-
-/* 消息区域 */
 
 .message-list {
-
   flex: 1;
-
   overflow-y: auto;
-
-  padding-right: 5px;
 }
-
-/* 消息 */
 
 .message-item {
-
   max-width: 70%;
-
-  padding: 12px 16px;
-
-  border-radius: 12px;
-
-  margin-bottom: 15px;
-
-  line-height: 1.6;
-
-  word-break: break-word;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 10px;
 }
 
-/* 用户 */
-
 .user {
-
   background: #409eff;
-
   color: white;
-
   margin-left: auto;
 }
 
-/* AI */
-
 .ai {
-
   background: #f4f4f5;
+}
 
+.input-area {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.profile-container {
+  width: 420px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.weight-history {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.weight-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  background: #f5f7fa;
+  border-radius: 10px;
+}
+
+.date {
+  font-size: 13px;
   color: #333;
 }
 
-/* 输入区域 */
-
-.input-area {
-
-  height: 70px;
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 10px;
-
-  padding-top: 10px;
-
-  flex-shrink: 0;
+.time {
+  font-size: 12px;
+  color: #999;
 }
 
-/* 输入框 */
-
-.input-area :deep(.el-input) {
-
-  flex: 1;
+.weight {
+  font-size: 18px;
+  font-weight: bold;
+  color: #409eff;
 }
 
-/* 按钮 */
-
-.input-area .el-button {
-
-  width: 100px;
-
-  height: 40px;
-}
-
-/* 右边档案 */
-
-.profile-container {
-
-  width: 400px;
-
-  height: 100%;
-
-  background: white;
-
-  border-radius: 12px;
-
+.empty {
+  text-align: center;
+  color: #999;
   padding: 20px;
-
-  box-sizing: border-box;
-
-  overflow-y: auto;
-
-  flex-shrink: 0;
 }
-
 </style>

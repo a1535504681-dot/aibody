@@ -17,7 +17,7 @@ export function generateRoutes(menus: any[]): RouteRecordRaw[] {
     // ⭐ 只有真正有子节点才递归
     if (Array.isArray(menu.children) && menu.children.length > 0) {
       route.children = generateRoutes(menu.children);
-    }
+    }  
     return route;
   });
 }
